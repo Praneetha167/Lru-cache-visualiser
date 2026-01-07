@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LRU Cache Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f5f3ef;
+      --panel: #ffffff;
+      --card: #f8f7f4;
+      --accent: #2563eb;
+      --accent-soft: #e3ebff;
+      --text: #111827;
+      --muted: #6b7280;
+      --shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(1000px, 100%);
+      background: var(--panel);
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    h1 { margin: 0; font-size: 22px; }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid #e5e7eb;
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    label {
+      font-size: 13px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      transition: border 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+    .inline {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      transition: transform 0.12s ease, box-shadow 0.15s ease, border 0.18s ease;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
+    }
+
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0,0,0,0.12); }
+    button:active { transform: translateY(0); }
+
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--muted);
+      min-height: 20px;
+    }
+
+    .strip { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; min-height: 72px; }
+
+    .node {
+      flex: 1 1 120px;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .node h3 { margin: 0 0 4px 0; font-size: 15px; color: var(--accent); }
+    .node p { margin: 0; font-size: 13px; color: var(--text); }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: var(--accent-soft);
+      border-radius: 999px;
+      border: 1px solid #dbe5ff;
+      font-size: 12px;
+      color: var(--accent);
+    }
+
+    .legend { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+
+    .legend span:last-child { color: var(--muted); font-size: 13px; }
+
+    .empty {
+      color: var(--muted);
+      font-size: 14px;
+      padding: 16px;
+      border: 1px dashed #d1d5db;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>LRU Cache Visualizer</h1>
+    </header>
+
+    <div class="controls">
+      <div class="card">
+        <label for="capacity">Capacity</label>
+        <div class="inline">
+          <input id="capacity" type="number" min="1" value="4" />
+          <button id="applyCap" class="primary">Apply</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Put (add/update)</label>
+        <div class="inline">
+          <input id="key" type="text" placeholder="key" />
+          <input id="value" type="text" placeholder="value" />
+        </div>
+        <button id="put" class="primary" style="margin-top: 10px;">Put</button>
+      </div>
+
+      <div class="card">
+        <label>Get (reorders on hit)</label>
+        <div class="inline">
+          <input id="getKey" type="text" placeholder="key" />
+          <button id="get">Get</button>
+        </div>
+        <div id="result" class="status"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Cache State</strong>
+      <div id="strip" class="strip"></div>
+      <button id="clear" style="margin-top: 12px;">Clear Cache</button>
+    </div>
+  </div>
+
+  <script>
+    class LRUCache {
+      constructor(capacity = 4) {
+        this.capacity = capacity;
+        this.map = new Map();
+      }
+
+      setCapacity(cap) {
+        this.capacity = Math.max(1, cap);
+        this._trim();
+      }
+
+      set(key, value) {
+        if (!key) return;
+        if (this.map.has(key)) this.map.delete(key);
+        this.map.set(key, value);
+        this._trim();
+      }
+
+      get(key) {
+        if (!this.map.has(key)) return null;
+        const value = this.map.get(key);
+        this.map.delete(key);
+        this.map.set(key, value);
+        return value;
+      }
+
+      entriesNewestFirst() {
+        return Array.from(this.map.entries()).reverse();
+      }
+
+      _trim() {
+        while (this.map.size > this.capacity) {
+          const oldestKey = this.map.keys().next().value;
+          this.map.delete(oldestKey);
+        }
+      }
+
+      clear() { this.map.clear(); }
+    }
+
+    const cache = new LRUCache(4);
+    const strip = document.getElementById('strip');
+    const result = document.getElementById('result');
+
+    function render() {
+      const entries = cache.entriesNewestFirst();
+      strip.innerHTML = '';
+      if (entries.length === 0) {
+        strip.innerHTML = '<div class="empty">Cache is empty</div>';
+        return;
+      }
+      entries.forEach(([key, value]) => {
+        const node = document.createElement('div');
+        node.className = 'node';
+        node.innerHTML = `<h3>${key}</h3><p>${value}</p>`;
+        strip.appendChild(node);
+      });
+    }
+
+    document.getElementById('applyCap').onclick = () => {
+      const cap = parseInt(document.getElementById('capacity').value, 10);
+      cache.setCapacity(Number.isFinite(cap) ? cap : 4);
+      render();
+    };
+
+    document.getElementById('put').onclick = () => {
+      const key = document.getElementById('key').value.trim();
+      const value = document.getElementById('value').value.trim();
+      if (!key) return;
+      cache.set(key, value || '(empty)');
+      result.textContent = '';
+      render();
+    };
+
+    document.getElementById('get').onclick = () => {
+      const key = document.getElementById('getKey').value.trim();
+      const value = cache.get(key);
+      result.textContent = value !== null ? `Hit: ${value}` : 'Miss';
+      render();
+    };
+
+    document.getElementById('clear').onclick = () => {
+      cache.clear();
+      result.textContent = '';
+      render();
+    };
+
+    render();
+  </script>
+</body>
+</html>
